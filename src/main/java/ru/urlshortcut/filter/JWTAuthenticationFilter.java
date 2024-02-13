@@ -20,13 +20,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 
+import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
+
 @AllArgsConstructor
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    protected static final String SECRET =" SecretKeyToGenJWT";
+    protected static final String SECRET = "SecretKeyToGenJWT";
     protected static final long EXPIRATION_TIME = 864_000_000;
     protected static final String HEADER_STRING = "Authorization";
     protected static final String TOKEN_PREFIX = "Bearer ";
-    public static final String SING_UP_URL = "/registration/";
+    public static final String SING_UP_URL = "/websites/registration";
 
     private AuthenticationManager auth;
 
@@ -51,7 +53,7 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String token = JWT.create()
                 .withSubject(((User) authResult.getPrincipal()).getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .sign(Algorithm.HMAC512(SECRET.getBytes()));
+                .sign(HMAC512(SECRET.getBytes()));
         response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
     }
 }

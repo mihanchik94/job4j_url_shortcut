@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import static ru.urlshortcut.filter.JWTAuthenticationFilter.*;
+
 public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     public JWTAuthorizationFilter(AuthenticationManager authenticationManager) {
@@ -22,8 +24,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String header = request.getHeader(JWTAuthenticationFilter.HEADER_STRING);
-        if (header == null || !header.equals(JWTAuthenticationFilter.TOKEN_PREFIX)) {
+        String header = request.getHeader(HEADER_STRING);
+        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
             chain.doFilter(request, response);
             return;
         }
@@ -33,15 +35,16 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest req) {
-        String token = req.getHeader(JWTAuthenticationFilter.HEADER_STRING);
+        String token = req.getHeader(HEADER_STRING);
         if (token != null) {
-            String user = JWT.require(Algorithm.HMAC512(JWTAuthenticationFilter.SECRET))
+            String user = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
                     .build()
-                    .verify(token.replace(JWTAuthenticationFilter.TOKEN_PREFIX, ""))
+                    .verify(token.replace(TOKEN_PREFIX, ""))
                     .getSubject();
             if (user != null) {
                 return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
             }
+            return null;
         }
         return null;
     }
