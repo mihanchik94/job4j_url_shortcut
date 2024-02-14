@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import ru.urlshortcut.dto.WebSiteDto;
 import ru.urlshortcut.model.WebSite;
 import ru.urlshortcut.repository.WebSiteRepository;
+import ru.urlshortcut.utils.CodeGenerator;
 import ru.urlshortcut.utils.LoginCodeGenerator;
 import ru.urlshortcut.utils.PasswordCodeGenerator;
 
@@ -22,8 +23,8 @@ import java.util.Optional;
 @AllArgsConstructor
 public class SimpleWebSiteService implements WebSiteService, UserDetailsService {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleWebSiteService.class);
-    private static LoginCodeGenerator loginCodeGenerator;
-    private static PasswordCodeGenerator passwordCodeGenerator;
+    private static CodeGenerator loginCodeGenerator;
+    private static CodeGenerator passwordCodeGenerator;
     private final WebSiteRepository webSiteRepository;
     private final BCryptPasswordEncoder encoder;
 
@@ -45,6 +46,12 @@ public class SimpleWebSiteService implements WebSiteService, UserDetailsService 
             LOG.error(e.getMessage(), e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<WebSite> findByLogin(String login) {
+        return Optional.ofNullable(webSiteRepository.findByLogin(login)
+                .orElseThrow(() -> new UsernameNotFoundException(login)));
     }
 
     @Override

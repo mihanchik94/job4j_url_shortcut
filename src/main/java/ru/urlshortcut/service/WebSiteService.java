@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface WebSiteService {
     Optional<WebSiteDto> save(WebSite webSite);
+    Optional<WebSite> findByLogin(String login);
 }

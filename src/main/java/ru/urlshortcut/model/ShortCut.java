@@ -22,8 +22,6 @@ public class ShortCut {
     @NotNull(message = "Link mustn't be null")
     @NotBlank(message = "Link mustn't be empty")
     private String link;
-    @NotNull(message = "Unique code mustn't be null")
-    @NotBlank(message = "Unique code mustn't be empty")
     private String code;
     @Min(value = 0)
     private int total;
