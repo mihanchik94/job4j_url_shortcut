@@ -23,8 +23,6 @@ import java.util.Optional;
 @AllArgsConstructor
 public class SimpleWebSiteService implements WebSiteService, UserDetailsService {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleWebSiteService.class);
-    private static CodeGenerator loginCodeGenerator;
-    private static CodeGenerator passwordCodeGenerator;
     private final WebSiteRepository webSiteRepository;
     private final BCryptPasswordEncoder encoder;
 
@@ -34,8 +32,8 @@ public class SimpleWebSiteService implements WebSiteService, UserDetailsService 
         boolean isRegister = webSiteRepository.findBySite(webSite.getSite()).isEmpty();
         try {
             if (isRegister) {
-                loginCodeGenerator = new LoginCodeGenerator(webSite.getSite());
-                passwordCodeGenerator = new PasswordCodeGenerator();
+                CodeGenerator loginCodeGenerator = new LoginCodeGenerator(webSite.getSite());
+                CodeGenerator passwordCodeGenerator = new PasswordCodeGenerator();
                 webSite.setLogin(loginCodeGenerator.generate());
                 String password = passwordCodeGenerator.generate();
                 webSite.setPassword(encoder.encode(password));

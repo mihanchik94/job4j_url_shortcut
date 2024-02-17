@@ -5,23 +5,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.urlshortcut.dto.ShortCutDto;
+import ru.urlshortcut.dto.StatisticDto;
 import ru.urlshortcut.dto.WebSiteDto;
 import ru.urlshortcut.model.ShortCut;
 import ru.urlshortcut.model.WebSite;
 import ru.urlshortcut.service.ShortCutService;
 import ru.urlshortcut.service.WebSiteService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -44,7 +39,7 @@ public class WebSiteController {
         String username = (String) auth.getPrincipal();
         Optional<WebSite> optionalWebSite = webSiteService.findByLogin(username);
         shortCut.setWebSite(optionalWebSite.get());
-        Optional<ShortCutDto> savedShortCut = shortCutService.convert(shortCut);
+        Optional<ShortCutDto> savedShortCut = shortCutService.save(shortCut);
         if (savedShortCut.isPresent()) {
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
@@ -52,5 +47,30 @@ public class WebSiteController {
         } else {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This url has already been registered.");
         }
+    }
+
+    @GetMapping("/redirect/{code}")
+    public ResponseEntity<String> redirect(@PathVariable String code) {
+        Optional<ShortCut> shortCut = shortCutService.findByCode(code);
+        String message = "HTTP CODE - 302 REDIRECT " + shortCut.get().getLink();
+        return ResponseEntity.ok().body(message);
+    }
+
+    @GetMapping("/statistic")
+    public ResponseEntity<List<StatisticDto>> getStatistic() {
+        List<StatisticDto> body = shortCutService.findAll();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
+
+    @GetMapping("/mystatistic")
+    public ResponseEntity<List<StatisticDto>> getMyStatistic(Authentication auth) {
+        String username = (String) auth.getPrincipal();
+        Optional<WebSite> optionalWebSite = webSiteService.findByLogin(username);
+        List<StatisticDto> body = shortCutService.findMyShortCuts(optionalWebSite.get().getId());
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
 }
