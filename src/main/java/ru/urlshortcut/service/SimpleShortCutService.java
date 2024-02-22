@@ -3,9 +3,11 @@ package ru.urlshortcut.service;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.urlshortcut.dto.ShortCutDto;
 import ru.urlshortcut.dto.StatisticDto;
+import ru.urlshortcut.exception.ServiceException;
 import ru.urlshortcut.model.ShortCut;
 import ru.urlshortcut.repository.ShortCutRepository;
 import ru.urlshortcut.utils.CodeGenerator;
@@ -23,25 +25,23 @@ public class SimpleShortCutService implements ShortCutService {
 
 
     @Override
-    public Optional<ShortCutDto> save(ShortCut shortCut) {
-        Optional<ShortCut> savedShortCut = shortCutRepository.findByLink(shortCut.getLink());
-        if (savedShortCut.isEmpty()) {
-            try {
-                CodeGenerator linkCodeGenerator = new LinkCodeGenerator();
-                shortCut.setCode(linkCodeGenerator.generate());
-                shortCutRepository.save(shortCut);
-                return Optional.of(new ShortCutDto(shortCut.getCode(), shortCut.getTotal()));
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
+    public Optional<ShortCutDto> save(ShortCut shortCut) throws ServiceException {
+        try {
+            CodeGenerator linkCodeGenerator = new LinkCodeGenerator();
+            shortCut.setCode(linkCodeGenerator.generate());
+            shortCutRepository.save(shortCut);
+            return Optional.of(new ShortCutDto(shortCut.getCode(), shortCut.getTotal()));
+        } catch (DataIntegrityViolationException e) {
+            LOG.error(e.getMessage(), e);
+            throw new ServiceException("Can't save shortcut. Check link and password", e);
         }
-        return Optional.empty();
     }
 
     @Override
     public Optional<ShortCut> findByCode(String code) {
         Optional<ShortCut> optionalShortCut = shortCutRepository.findByCode(code);
-        if (optionalShortCut.isPresent()) {shortCutRepository.incrementTotalByCode(code);
+        if (optionalShortCut.isPresent()) {
+            shortCutRepository.incrementTotalByCode(code);
             return optionalShortCut;
         }
         return Optional.empty();

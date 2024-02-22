@@ -3,6 +3,7 @@ package ru.urlshortcut.service;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.urlshortcut.dto.WebSiteDto;
+import ru.urlshortcut.exception.ServiceException;
 import ru.urlshortcut.model.WebSite;
 import ru.urlshortcut.repository.WebSiteRepository;
 import ru.urlshortcut.utils.CodeGenerator;
@@ -28,23 +30,20 @@ public class SimpleWebSiteService implements WebSiteService, UserDetailsService 
 
 
     @Override
-    public Optional<WebSiteDto> save(WebSite webSite) {
-        boolean isRegister = webSiteRepository.findBySite(webSite.getSite()).isEmpty();
+    public Optional<WebSiteDto> save(WebSite webSite) throws ServiceException {
         try {
-            if (isRegister) {
-                CodeGenerator loginCodeGenerator = new LoginCodeGenerator(webSite.getSite());
-                CodeGenerator passwordCodeGenerator = new PasswordCodeGenerator();
-                webSite.setLogin(loginCodeGenerator.generate());
-                String password = passwordCodeGenerator.generate();
-                webSite.setPassword(encoder.encode(password));
-                webSiteRepository.save(webSite);
-                return Optional.of(new WebSiteDto(isRegister, webSite.getLogin(), password));
-            }
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
+            CodeGenerator loginCodeGenerator = new LoginCodeGenerator(webSite.getSite());
+            CodeGenerator passwordCodeGenerator = new PasswordCodeGenerator();
+            webSite.setLogin(loginCodeGenerator.generate());
+            String password = passwordCodeGenerator.generate();
+            webSite.setPassword(encoder.encode(password));
+            webSiteRepository.save(webSite);
+            return Optional.of(new WebSiteDto(true, webSite.getLogin(), password));
+        } catch (DataIntegrityViolationException e) {
+            throw new ServiceException("Can't save website. Check link", e);
         }
-        return Optional.empty();
     }
+
 
     @Override
     public Optional<WebSite> findByLogin(String login) {

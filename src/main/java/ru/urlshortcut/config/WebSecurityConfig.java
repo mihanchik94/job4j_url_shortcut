@@ -23,7 +23,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.cors().and().csrf().disable().authorizeRequests()
-                .antMatchers(HttpMethod.GET, "/websites/redirect/*").permitAll()
+                .antMatchers(HttpMethod.GET, "/shortcuts/redirect/*").permitAll()
                 .antMatchers(HttpMethod.POST, SING_UP_URL).permitAll()
                 .anyRequest().authenticated()
                 .and()
